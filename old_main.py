@@ -1,11 +1,12 @@
 # importing common libraries
 import cv2
 import numpy as np
-
+import keyboard
 # importing the libraries for emotions
 from keras.models import load_model
 from time import sleep
-from tensorflow.keras.utils import img_to_array
+#from tensorflow.keras.utils import img_to_array
+
 from keras_preprocessing.image import img_to_array
 from keras.preprocessing import image
 
@@ -16,8 +17,13 @@ from imutils import face_utils
 import dlib
 import streamlit as st
 
+from AlarmSystem import Alarm_Systrem
+
+
+
+
 # importing thresholds for EAR and MAR
-EYE_AR_THRESH = 0.3
+EYE_AR_THRESH = 0.2
 EYE_AR_CONSEC_FRAMES = 15
 MOUTH_AR_THRESH = 0.4
 
@@ -33,9 +39,9 @@ mar = 0
 # face_cascade = cv2.CascadeClassifier("cascade.xml")
 try:
     # eye_cascade = cv2.CascadeClassifier(r"C:\Users\MRUNMAYEE J. MORE\Desktop\Reference books\LY_Project\LY_Project_2022-23\src\haar_files\haarcascade_eye.xml")
-    eye_cascade = cv2.CascadeClassifier(r"C:\Users\MRUNMAYEE J. MORE\Desktop\Reference books\LY_Project\LY_Project_2022-23\src\haar_files\haarcascade_frontalface_default.xml")
-    face_classifier = cv2.CascadeClassifier(r"C:\Users\MRUNMAYEE J. MORE\Desktop\Reference books\LY_Project\LY_Project_2022-23\src\haar_files\haarcascade_frontalface_default.xml")
-    classifier = load_model(r"C:\Users\MRUNMAYEE J. MORE\Desktop\Reference books\LY_Project\LY_Project_2022-23\src\haar_files\model.h5")
+    eye_cascade = cv2.CascadeClassifier(r"C:\Users\Navya\Documents\GitHub\LY_Project_2022-23\src\haar_files\haarcascade_eye")
+    face_classifier = cv2.CascadeClassifier(r"C:\Users\Navya\Documents\GitHub\LY_Project_2022-23\src\haar_files\haarcascade_frontalface_default.xml")
+    classifier = load_model(r"C:\Users\Navya\Documents\GitHub\LY_Project_2022-23\src\haar_files\model.h5")
 
 except Exception:
     print("Error in loading  Cascade Files")
@@ -51,6 +57,7 @@ COUNTER_FRAMES_MOUTH = 0
 COUNTER_BLINK = 0
 COUNTER_MOUTH = 0
 
+starttime = time.time()
 
 def eye_aspect_ratio(eye):
     A = dist.euclidean(eye[1], eye[5])
@@ -74,7 +81,7 @@ size = frame.shape
 
 detector = dlib.get_frontal_face_detector()
 predictor = dlib.shape_predictor(
-    r"C:\Users\MRUNMAYEE J. MORE\Desktop\Reference books\LY_Project\LY_Project_2022-23\src\haar_files\shape_predictor_68_face_landmarks.dat")
+    r"C:\Users\Navya\Documents\GitHub\LY_Project_2022-23\src\haar_files\shape_predictor_68_face_landmarks.dat")
 (lStart, lEnd) = face_utils.FACIAL_LANDMARKS_IDXS["left_eye"]
 (rStart, rEnd) = face_utils.FACIAL_LANDMARKS_IDXS["right_eye"]
 
@@ -165,34 +172,86 @@ while True:
             cv2.drawContours(frame, [jawHull], 0, (245, 255, 0), 1)
 
         if p2[1] > p1[1]*1.5 or COUNTER_BLINK > 25 or COUNTER_MOUTH > 2:
-            cv2.putText(frame, "Send Alert!", (200, 60),
+            cv2.putText(frame, "Driver Yawning!", (200, 60),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
-            st.warning("Send Alert")
+            st.warning("Yawn : Alarm 1- Fatigue Alert, Please wake up!") #yawn
+
             html_string = """
             <audio controls autoplay>
-            <source src=""https://www.orangefreesounds.com/wp-content/uploads/2022/04/Small-bell-ringing-short-sound-effect.mp3" " type="audio/mp3">
+            <source src="http://codeskulptor-demos.commondatastorage.googleapis.com/descent/background%20music.mp3" " type="audio/mp3"> 
             </audio>
             """
             sound = st.empty()
             sound.markdown(html_string, unsafe_allow_html=True)  # will display a st.audio with the sound you specified in the "src" of the html_string and autoplay it
-            time.sleep(2)
+            time.sleep(17)
+            Alarm_Systrem.alarm_level_1()
 
         if ear < EYE_AR_THRESH:
             COUNTER_FRAMES_EYE += 1
 
             if COUNTER_FRAMES_EYE >= EYE_AR_CONSEC_FRAMES:
-                cv2.putText(frame, " Driver Sleeping!", (200, 30),
+                cv2.putText(frame, "Driver Sleeping!", (200, 30),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
-                st.error("Driver Sleeping.Please Wake Up!")
+                st.error("Eye Closure : Alarm 1- Fatigue Alert, Please wake up!") #persistent 10 secs eye closure 
                 st.success(ear)
-                html_string = """
-                <audio controls autoplay>
-                <source src=""https://www.orangefreesounds.com/wp-content/uploads/2022/04/Small-bell-ringing-short-sound-effect.mp3" " type="audio/mp3">
+
+                audio_file = r"C:\Users\Navya\Documents\GitHub\Drowsiness_Detection_V1\audio\hotel_assistance.mp3"
+
+                st.markdown("""
+                <audio id="my-audio" controls autoplay>
+                <source src="%s" type="audio/mp3">
                 </audio>
-                """
-                sound = st.empty()
-                sound.markdown(html_string, unsafe_allow_html=True)  # will display a st.audio with the sound you specified in the "src" of the html_string and autoplay it
-                time.sleep(2)
+                <script>
+                var audio = document.getElementById("my-audio");
+                audio.play();
+                </script>
+                """ % audio_file, unsafe_allow_html=True)
+                
+                # html_string = """
+                # <audio controls autoplay>
+                # <source src="http://codeskulptor-demos.commondatastorage.googleapis.com/descent/background%20music.mp3" " type="audio/mp3">
+                # </audio>
+                # """
+                # sound = st.empty()
+                # sound.markdown(html_string, unsafe_allow_html=True) 
+                Alarm_Systrem.alarm_level_1()
+
+                # html_string = """
+                # <audio controls autoplay>
+                # <source src="https://www.orangefreesounds.com/wp-content/uploads/2022/04/Small-bell-ringing-short-sound-effect.mp3" type="audio/mp3">
+                # </audio>
+                # """
+                # sound = st.empty()
+                # sound.markdown(html_string, unsafe_allow_html=True)  # will display a st.audio with the sound you specified in the "src" of the html_string and autoplay it
+                
+                # st.write("PLEASE GIVE YOUR RESPONSE, DRIVER (y for yes, n for no): ")
+                # while True:
+                #     if keyboard.is_pressed("y"):
+    
+                #         st.write('Activating hotel assistance system: ')
+                #         #call hotel api python code
+                #         break   
+                #     elif keyboard.is_pressed("n"):
+    
+                #         st.write("Going back to fatigue detection")
+    
+                #         break
+                    
+
+                # alarm_level_1_yes = 0 #---web-app --> yes
+                # alarm_level_1_no = 0 #----web-app--> no
+
+            #st.write("PLEASE GIVE YOUR RESPONSE")
+                # def hotel_ass_message():
+                #     st.write('Activating hotel assistance system: ')
+
+                # st.button('yes', on_click=hotel_ass_message)
+                #     # alarm_level_1_yes=1
+
+                # # elif st.button('no'):
+                # #     # alarm_level_1_no = 1
+                # #     st.write("Going back to fatigue detection")
+                # time.sleep(2)
 
         else:
             if COUNTER_FRAMES_EYE > 2:
@@ -219,31 +278,31 @@ while True:
     
         cv2.putText(frame, "EAR: {:.2f}".format(ear), (30, 450),
                 cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 10, 0), 2)
-        with kpi4:
-            st.markdown("**Frame Rate**")
-            kpi4_text=st.markdown("0")
-            kpi4_text.write("EAR: {:.2f}".format(ear))
+        # with kpi4:
+        #     st.markdown("**Frame Rate**")
+        #     kpi4_text=st.markdown("0")
+        #     kpi4_text.write("EAR: {:.2f}".format(ear))
 
         cv2.putText(frame, "MAR: {:.2f}".format(mar), (200, 450),
                 cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 10, 0), 2)
-        with kpi3:
-            st.markdown("**MAR**")
-            kpi3_text=st.markdown("0")
-            kpi3_text.write("EAR: {:.2f}".format(mar))
+        # with kpi3:
+        #     st.markdown("**MAR**")
+        #     kpi3_text=st.markdown("0")
+        #     kpi3_text.write("EAR: {:.2f}".format(mar))
         
         cv2.putText(frame, "Blinks: {}".format(COUNTER_BLINK), (10, 30),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 0), 2)
-        with kpi2:
-            st.markdown("**Blink Count**")
-            kpi2_text=st.markdown("0")
-            kpi2_text.write("Blink: {:.2f}".format(COUNTER_BLINK))
+        # with kpi2:
+        #     st.markdown("**Blink Count**")
+        #     kpi2_text=st.markdown("0")
+        #     kpi2_text.write("Blink: {:.2f}".format(COUNTER_BLINK))
         
         cv2.putText(frame, "Mouths: {}".format(COUNTER_MOUTH), (10, 60),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 0), 2)
-        with kpi1:
-            st.markdown("**Yawn Count**")
-            kpi1_text=st.markdown("0")
-            kpi1_text.write("Yawn: {:.2f}".format(COUNTER_MOUTH))
+        # with kpi1:
+        #     st.markdown("**Yawn Count**")
+        #     kpi1_text=st.markdown("0")
+        #     kpi1_text.write("Yawn: {:.2f}".format(COUNTER_MOUTH))
 
     cv2.imshow('Emotion Sleepliness Detection', frame)
     key = cv2.waitKey(1) & 0xFF
